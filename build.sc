@@ -2,7 +2,6 @@ import mill._
 import mill.scalalib._
 import mill.scalalib.scalafmt._
 import mill.scalalib.publish._
-import mill.scalalib.api.ZincWorkerUtil._
 import os.Path
 
 import $ivy.`com.carlosedp::mill-aliases::0.4.1`
@@ -14,6 +13,17 @@ import com.goyeau.mill.scalafix.ScalafixModule
 import $ivy.`io.chris-kipp::mill-ci-release::0.1.9`
 import io.kipp.mill.ci.release._
 import de.tobiasroeser.mill.vcs.version.VcsVersion
+
+// Helper function to get Mill binary platform version
+def millBinaryPlatform(millVersion: String): String = {
+    val versionParts = millVersion.split('.').take(2)
+    versionParts match {
+        case Array("0", "11") => "0.11"
+        case Array("0", "12") => "0.11"  // 0.12.x maintains binary compatibility with 0.11
+        case Array("1", _)    => "1"     // Mill 1.x uses "1" as binary platform
+        case _                => versionParts.mkString(".")
+    }
+}
 
 val millVersions = Seq("0.11.12", "0.12.11")
 val scala213     = "2.13.12"
@@ -27,7 +37,12 @@ trait Plugin  extends Cross.Module[String]
     with ScalafixModule {
     val millVersion  = crossValue
     def scalaVersion = scala213
-    def artifactName = s"${pluginName}_mill${scalaNativeBinaryVersion(millVersion)}"
+    def artifactName = s"${pluginName}_mill${millBinaryPlatform(millVersion)}"
+    
+    // Override to ensure correct Mill binary version in artifact ID
+    override def artifactId: T[String] = T {
+        s"${artifactName()}_${artifactScalaVersion()}"
+    }
 
     def compileIvyDeps = super.compileIvyDeps() ++ Agg(
         ivy"com.lihaoyi::mill-scalalib:${millVersion}",
@@ -38,7 +53,7 @@ trait Plugin  extends Cross.Module[String]
 
     def sources = T.sources {
         super.sources() ++ Seq(
-            millSourcePath / s"src-mill${scalaNativeBinaryVersion(millVersion)}"
+            millSourcePath / s"src-mill${millBinaryPlatform(millVersion)}"
         ).map(PathRef(_))
     }
 
