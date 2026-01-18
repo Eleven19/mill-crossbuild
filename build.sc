@@ -15,7 +15,7 @@ import $ivy.`io.chris-kipp::mill-ci-release::0.1.9`
 import io.kipp.mill.ci.release._
 import de.tobiasroeser.mill.vcs.version.VcsVersion
 
-val millVersions = Seq("0.11.6")
+val millVersions = Seq("0.11.12", "0.12.11")
 val scala213     = "2.13.12"
 val pluginName   = "mill-crossbuild"
 
