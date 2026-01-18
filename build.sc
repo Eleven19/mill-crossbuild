@@ -26,7 +26,7 @@ def millBinaryPlatform(millVersion: String): String = {
     }
 }
 
-val millVersions = Seq("0.11.12", "0.12.11")
+val millVersions = Seq("0.11.12", "0.12.11", "1.0.6")
 val scala213     = "2.13.12"
 val pluginName   = "mill-crossbuild"
 
