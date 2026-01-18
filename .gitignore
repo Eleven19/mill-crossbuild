@@ -2,4 +2,4 @@ out/
 .bloop/
 .bsp/
 .metals/
-.vscode/
+.vscode/mill.*

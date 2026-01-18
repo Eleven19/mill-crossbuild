@@ -2,7 +2,6 @@ import mill._
 import mill.scalalib._
 import mill.scalalib.scalafmt._
 import mill.scalalib.publish._
-import mill.scalalib.api.ZincWorkerUtil._
 import os.Path
 
 import $ivy.`com.carlosedp::mill-aliases::0.4.1`
@@ -15,7 +14,17 @@ import $ivy.`io.chris-kipp::mill-ci-release::0.1.9`
 import io.kipp.mill.ci.release._
 import de.tobiasroeser.mill.vcs.version.VcsVersion
 
-val millVersions = Seq("0.11.6")
+// Helper function to get Mill binary platform version
+def millBinaryPlatform(millVersion: String): String = {
+    val versionParts = millVersion.split('.').take(2).map(_.takeWhile(_.isDigit))
+    versionParts match {
+        case Array("1", _)    => "1"     // Mill 1.x uses "1" as binary platform
+        case Array(major, minor) if major.nonEmpty && minor.nonEmpty => s"$major.$minor"
+        case _ => throw new IllegalArgumentException(s"Invalid Mill version format: $millVersion")
+    }
+}
+
+val millVersions = Seq("1.0.6")
 val scala213     = "2.13.12"
 val pluginName   = "mill-crossbuild"
 
@@ -27,8 +36,8 @@ trait Plugin  extends Cross.Module[String]
     with ScalafixModule {
     val millVersion  = crossValue
     def scalaVersion = scala213
-    def artifactName = s"${pluginName}_mill${scalaNativeBinaryVersion(millVersion)}"
-
+    def artifactName = s"${pluginName}_mill${millBinaryPlatform(millVersion)}"
+    
     def compileIvyDeps = super.compileIvyDeps() ++ Agg(
         ivy"com.lihaoyi::mill-scalalib:${millVersion}",
         ivy"com.lihaoyi::mill-scalanativelib:${millVersion}",
@@ -38,7 +47,7 @@ trait Plugin  extends Cross.Module[String]
 
     def sources = T.sources {
         super.sources() ++ Seq(
-            millSourcePath / s"src-mill${scalaNativeBinaryVersion(millVersion)}"
+            millSourcePath / s"src-mill${millBinaryPlatform(millVersion)}"
         ).map(PathRef(_))
     }
 
