@@ -38,17 +38,10 @@ trait Plugin  extends Cross.Module[String]
     def scalaVersion = scala213
     def artifactName = s"${pluginName}_mill${millBinaryPlatform(millVersion)}"
     
-    // Mill 1.x uses Scala 3 for its artifacts, while Mill 0.x uses Scala 2.13
-    def millScalaVersion = millVersion.split('.').head match {
-        case "0" => "2.13"
-        case "1" => "3"
-        case _   => "2.13"
-    }
-
     def compileIvyDeps = super.compileIvyDeps() ++ Agg(
-        ivy"com.lihaoyi:mill-scalalib_${millScalaVersion}:${millVersion}",
-        ivy"com.lihaoyi:mill-scalanativelib_${millScalaVersion}:${millVersion}",
-        ivy"com.lihaoyi:mill-scalajslib_${millScalaVersion}:${millVersion}",
+        ivy"com.lihaoyi::mill-scalalib:${millVersion}",
+        ivy"com.lihaoyi::mill-scalanativelib:${millVersion}",
+        ivy"com.lihaoyi::mill-scalajslib:${millVersion}",
         ivy"org.scala-lang:scala-reflect:${this.scalaVersion()}",
     )
 
