@@ -18,15 +18,13 @@ import de.tobiasroeser.mill.vcs.version.VcsVersion
 def millBinaryPlatform(millVersion: String): String = {
     val versionParts = millVersion.split('.').take(2).map(_.takeWhile(_.isDigit))
     versionParts match {
-        case Array("0", "11") => "0.11"
-        case Array("0", "12") => "0.11"  // 0.12.x maintains binary compatibility with 0.11
         case Array("1", _)    => "1"     // Mill 1.x uses "1" as binary platform
         case Array(major, minor) if major.nonEmpty && minor.nonEmpty => s"$major.$minor"
         case _ => throw new IllegalArgumentException(s"Invalid Mill version format: $millVersion")
     }
 }
 
-val millVersions = Seq("0.11.12", "0.12.11", "1.0.6")
+val millVersions = Seq("1.0.6")
 val scala213     = "2.13.12"
 val pluginName   = "mill-crossbuild"
 
@@ -39,11 +37,18 @@ trait Plugin  extends Cross.Module[String]
     val millVersion  = crossValue
     def scalaVersion = scala213
     def artifactName = s"${pluginName}_mill${millBinaryPlatform(millVersion)}"
+    
+    // Mill 1.x uses Scala 3 for its artifacts, while Mill 0.x uses Scala 2.13
+    def millScalaVersion = millVersion.split('.').head match {
+        case "0" => "2.13"
+        case "1" => "3"
+        case _   => "2.13"
+    }
 
     def compileIvyDeps = super.compileIvyDeps() ++ Agg(
-        ivy"com.lihaoyi::mill-scalalib:${millVersion}",
-        ivy"com.lihaoyi::mill-scalanativelib:${millVersion}",
-        ivy"com.lihaoyi::mill-scalajslib:${millVersion}",
+        ivy"com.lihaoyi:mill-scalalib_${millScalaVersion}:${millVersion}",
+        ivy"com.lihaoyi:mill-scalanativelib_${millScalaVersion}:${millVersion}",
+        ivy"com.lihaoyi:mill-scalajslib_${millScalaVersion}:${millVersion}",
         ivy"org.scala-lang:scala-reflect:${this.scalaVersion()}",
     )
 
