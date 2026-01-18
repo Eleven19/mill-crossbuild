@@ -16,12 +16,13 @@ import de.tobiasroeser.mill.vcs.version.VcsVersion
 
 // Helper function to get Mill binary platform version
 def millBinaryPlatform(millVersion: String): String = {
-    val versionParts = millVersion.split('.').take(2)
+    val versionParts = millVersion.split('.').take(2).map(_.takeWhile(_.isDigit))
     versionParts match {
         case Array("0", "11") => "0.11"
         case Array("0", "12") => "0.11"  // 0.12.x maintains binary compatibility with 0.11
         case Array("1", _)    => "1"     // Mill 1.x uses "1" as binary platform
-        case _                => versionParts.mkString(".")
+        case Array(major, minor) if major.nonEmpty && minor.nonEmpty => s"$major.$minor"
+        case _ => throw new IllegalArgumentException(s"Invalid Mill version format: $millVersion")
     }
 }
 
@@ -38,11 +39,6 @@ trait Plugin  extends Cross.Module[String]
     val millVersion  = crossValue
     def scalaVersion = scala213
     def artifactName = s"${pluginName}_mill${millBinaryPlatform(millVersion)}"
-    
-    // Override to ensure correct Mill binary version in artifact ID
-    override def artifactId: T[String] = T {
-        s"${artifactName()}_${artifactScalaVersion()}"
-    }
 
     def compileIvyDeps = super.compileIvyDeps() ++ Agg(
         ivy"com.lihaoyi::mill-scalalib:${millVersion}",
